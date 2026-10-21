@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vaani — Speech to Text</title>
+    <meta
+      name="description"
+      content="Real-time Hindi, English, and mixed speech transcription with a saved history."
+    />
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,680&family=Noto+Sans+Devanagari:wght@400;600&family=Outfit:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div>
+            <p class="brand-name">Vaani</p>
+            <p class="brand-sub">Speech to text</p>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Primary">
+          <button type="button" class="nav-btn active" data-view="live">Live session</button>
+          <button type="button" class="nav-btn" data-view="history">
+            History <span id="nav-count">0</span>
+          </button>
+        </nav>
+        <div class="sidebar-foot">
+          <p id="engine-note">Checking the speech engine…</p>
+          <p id="db-note"></p>
+        </div>
+      </aside>
+
+      <main>
+        <section id="view-live" aria-labelledby="live-heading">
+          <header class="page-head">
+            <div>
+              <p class="eyebrow">Real-time transcription</p>
+              <h1 id="live-heading">Speak. The words land as you talk.</h1>
+            </div>
+            <p id="engine-pill" class="pill">Engine</p>
+          </header>
+
+          <div class="live-layout">
+            <form id="session-form" class="card controls">
+              <label>
+                Session title
+                <input id="session-title" maxlength="200" placeholder="Standup notes, interview, idea…" />
+              </label>
+              <fieldset>
+                <legend>Language</legend>
+                <div class="modes" role="radiogroup" aria-label="Language">
+                  <label><input type="radio" name="language" value="auto" checked /> Auto</label>
+                  <label><input type="radio" name="language" value="hinglish" /> Hindi + English</label>
+                  <label><input type="radio" name="language" value="hi" /> Hindi</label>
+                  <label><input type="radio" name="language" value="en" /> English</label>
+                </div>
+              </fieldset>
+              <label>
+                Bias words
+                <input id="vocab" maxlength="400" placeholder="Procucev, Bangalore, Vaani" />
+              </label>
+              <p id="mode-hint" class="hint"></p>
+              <div class="record-row">
+                <button type="button" id="record-btn" class="record" aria-pressed="false">
+                  <span id="record-label">Record</span>
+                </button>
+                <div class="record-meta">
+                  <div class="meter" aria-hidden="true"><span id="meter-bar"></span></div>
+                  <p id="timer">00:00</p>
+                  <p id="record-state">Microphone is idle</p>
+                </div>
+              </div>
+              <div class="row-actions">
+                <button type="button" id="discard-btn" class="ghost" disabled>Discard</button>
+                <button type="button" id="copy-btn" class="ghost" disabled>Copy text</button>
+              </div>
+            </form>
+
+            <section class="card transcript-card" aria-live="polite">
+              <div class="transcript-head">
+                <h2>Transcript</h2>
+                <p id="lang-chips" class="chips"></p>
+              </div>
+              <div id="transcript" class="transcript">
+                <p class="placeholder">Your words will show up here while you speak.</p>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-history" hidden aria-labelledby="history-heading">
+          <header class="page-head">
+            <div>
+              <p class="eyebrow">Dashboard</p>
+              <h1 id="history-heading">Transcription history</h1>
+            </div>
+            <button type="button" id="new-btn" class="solid">New transcription</button>
+          </header>
+          <div class="card history-card">
+            <div class="history-tools">
+              <label class="grow">
+                Search
+                <input id="search" type="search" placeholder="Search Hindi or English text" />
+              </label>
+              <p id="result-count" class="hint"></p>
+            </div>
+            <div id="history-list" class="history-list"></div>
+            <div class="pager">
+              <button type="button" id="prev-page" class="ghost">Previous</button>
+              <button type="button" id="next-page" class="ghost">Next</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="editor-dialog" aria-labelledby="editor-heading">
+      <form id="editor-form">
+        <h2 id="editor-heading">Edit transcription</h2>
+        <label>
+          Title
+          <input id="editor-title" required maxlength="200" />
+        </label>
+        <label>
+          Transcript
+          <textarea id="editor-transcript" required rows="8"></textarea>
+        </label>
+        <label>
+          Language mode
+          <select id="editor-mode">
+            <option value="auto">Auto</option>
+            <option value="hinglish">Hindi + English</option>
+            <option value="hi">Hindi</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <div class="dialog-actions">
+          <button type="button" id="editor-delete" class="danger">Delete</button>
+          <span class="spacer"></span>
+          <button type="button" id="editor-cancel" class="ghost">Cancel</button>
+          <button type="submit" class="solid">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="confirm-dialog" aria-labelledby="confirm-heading">
+      <h2 id="confirm-heading">Delete this transcription?</h2>
+      <p id="confirm-copy">This removes it from the history.</p>
+      <div class="dialog-actions">
+        <button type="button" id="confirm-no" class="ghost">Cancel</button>
+        <button type="button" id="confirm-yes" class="danger">Delete</button>
+      </div>
+    </dialog>
+
+    <div id="toast" role="status"></div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
